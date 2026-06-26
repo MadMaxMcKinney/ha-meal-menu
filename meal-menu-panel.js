@@ -183,7 +183,7 @@ class MealMenuPanel extends HTMLElement {
 
         const board = MEALS.map(({ key, label, icon, dot }) => {
             const items = this._slot("active", key);
-            const dishes = items.length ? items.map((it) => this._dish(it, "active")).join("") : `<p class="empty">Nothing planned — plate something from the pantry below.</p>`;
+            const dishes = items.length ? items.map((it) => this._dish(it, "active")).join("") : `<p class="empty">Nothing planned.</p>`;
             return `<div class="course">
         <div class="course-head">
           <span class="course-dot" style="background:${dot}"></span>
@@ -225,7 +225,6 @@ class MealMenuPanel extends HTMLElement {
       <div class="wrap">
         ${this._error ? `<div class="banner">${esc(this._error)}</div>` : ""}
         <header class="masthead">
-          // <div class="masthead-mark"><ha-icon icon="mdi:chef-hat"></ha-icon></div>
           <div>
             <h1>Menu</h1>
             <p class="masthead-sub">${activeCount === 0 ? "Nothing planned yet" : `${activeCount} dishes on the board`}</p>
