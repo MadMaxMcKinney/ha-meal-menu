@@ -4,173 +4,187 @@
 // commands provided by the `meal_menu` integration.
 
 const MEALS = [
-  { key: "breakfast", label: "Breakfast", icon: "mdi:weather-sunset-up", dot: "#C98A2B", def: "mdi:egg-fried" },
-  { key: "lunch", label: "Lunch", icon: "mdi:white-balance-sunny", dot: "#6E8F5E", def: "mdi:food-apple" },
-  { key: "dinner", label: "Dinner", icon: "mdi:weather-night", dot: "#5B5B8A", def: "mdi:silverware-fork-knife" },
+    { key: "breakfast", label: "Breakfast", icon: "mdi:weather-sunset-up", dot: "#C98A2B", def: "mdi:egg-fried" },
+    { key: "lunch", label: "Lunch", icon: "mdi:white-balance-sunny", dot: "#6E8F5E", def: "mdi:food-apple" },
+    { key: "dinner", label: "Dinner", icon: "mdi:weather-night", dot: "#5B5B8A", def: "mdi:silverware-fork-knife" },
 ];
 
 const ICONS = [
-  "mdi:egg-fried", "mdi:bread-slice", "mdi:food-croissant", "mdi:coffee", "mdi:cup", "mdi:bacon",
-  "mdi:food-apple", "mdi:bowl-mix", "mdi:hamburger", "mdi:pizza", "mdi:taco", "mdi:noodles",
-  "mdi:pasta", "mdi:rice", "mdi:pot-steam", "mdi:food-drumstick", "mdi:fish", "mdi:cupcake",
-  "mdi:carrot", "mdi:cheese", "mdi:fruit-cherries", "mdi:silverware-fork-knife",
+    "mdi:egg-fried",
+    "mdi:bread-slice",
+    "mdi:food-croissant",
+    "mdi:coffee",
+    "mdi:cup",
+    "mdi:food-apple",
+    "mdi:bowl-mix",
+    "mdi:hamburger",
+    "mdi:pizza",
+    "mdi:taco",
+    "mdi:noodles",
+    "mdi:pasta",
+    "mdi:rice",
+    "mdi:pot-steam",
+    "mdi:food-drumstick",
+    "mdi:fish",
+    "mdi:cupcake",
+    "mdi:carrot",
+    "mdi:cheese",
+    "mdi:fruit-cherries",
+    "mdi:silverware-fork-knife",
 ];
 
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-const esc = (s) =>
-  String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 
 class MealMenuPanel extends HTMLElement {
-  constructor() {
-    super();
-    this.attachShadow({ mode: "open" });
-    this._entries = [];
-    this._drafts = { breakfast: "", lunch: "", dinner: "" };
-    this._draftIcon = { breakfast: "mdi:egg-fried", lunch: "mdi:food-apple", dinner: "mdi:silverware-fork-knife" };
-    this._openPalette = null;
-    this._confirmId = null;
-    this._loaded = false;
-    // Delegated listeners survive full re-renders (the shadow root persists).
-    this.shadowRoot.addEventListener("click", (e) => this._onClick(e));
-    this.shadowRoot.addEventListener("input", (e) => this._onInput(e));
-    this.shadowRoot.addEventListener("keydown", (e) => this._onKeydown(e));
-  }
-
-  // HA assigns the hass object here, repeatedly. We only load once.
-  set hass(hass) {
-    this._hass = hass;
-    if (!this._loaded) {
-      this._loaded = true;
-      this._load();
+    constructor() {
+        super();
+        this.attachShadow({ mode: "open" });
+        this._entries = [];
+        this._drafts = { breakfast: "", lunch: "", dinner: "" };
+        this._draftIcon = { breakfast: "mdi:egg-fried", lunch: "mdi:food-apple", dinner: "mdi:silverware-fork-knife" };
+        this._openPalette = null;
+        this._confirmId = null;
+        this._loaded = false;
+        // Delegated listeners survive full re-renders (the shadow root persists).
+        this.shadowRoot.addEventListener("click", (e) => this._onClick(e));
+        this.shadowRoot.addEventListener("input", (e) => this._onInput(e));
+        this.shadowRoot.addEventListener("keydown", (e) => this._onKeydown(e));
     }
-  }
 
-  connectedCallback() {
-    if (!this._entries.length && !this._rendered) {
-      this.shadowRoot.innerHTML = `<style>${CSS}</style><div class="loading">Loading menu…</div>`;
+    // HA assigns the hass object here, repeatedly. We only load once.
+    set hass(hass) {
+        this._hass = hass;
+        if (!this._loaded) {
+            this._loaded = true;
+            this._load();
+        }
     }
-  }
 
-  async _load() {
-    try {
-      const res = await this._hass.connection.sendMessagePromise({ type: "meal_menu/get" });
-      this._entries = (res && res.entries) || [];
-      this._error = null;
-    } catch (e) {
-      this._entries = [];
-      this._error = "Couldn't load the menu. Try reloading the page.";
+    connectedCallback() {
+        if (!this._entries.length && !this._rendered) {
+            this.shadowRoot.innerHTML = `<style>${CSS}</style><div class="loading">Loading menu…</div>`;
+        }
     }
-    this._render();
-  }
 
-  async _persist() {
-    try {
-      await this._hass.connection.sendMessagePromise({ type: "meal_menu/save", entries: this._entries });
-    } catch (e) {
-      this._error = "Couldn't save your change. It may not stick after a reload.";
-      this._render();
+    async _load() {
+        try {
+            const res = await this._hass.connection.sendMessagePromise({ type: "meal_menu/get" });
+            this._entries = (res && res.entries) || [];
+            this._error = null;
+        } catch (e) {
+            this._entries = [];
+            this._error = "Couldn't load the menu. Try reloading the page.";
+        }
+        this._render();
     }
-  }
 
-  // --- mutations: update locally (snappy), re-render, then persist ---
-  _add(meal) {
-    const title = (this._drafts[meal] || "").trim();
-    if (!title) return;
-    this._entries.push({ id: uid(), title, icon: this._draftIcon[meal] || "mdi:silverware-fork-knife", meal, location: "pantry" });
-    this._drafts[meal] = "";
-    this._render();
-    this._persist();
-  }
-  _remove(id) {
-    this._entries = this._entries.filter((x) => x.id !== id);
-    this._confirmId = null;
-    this._render();
-    this._persist();
-  }
-  _move(id, location) {
-    this._entries = this._entries.map((x) => (x.id === id ? { ...x, location } : x));
-    this._render();
-    this._persist();
-  }
-
-  _onClick(e) {
-    const el = e.target.closest("[data-action]");
-    if (!el) return;
-    const { action, id, meal, icon } = el.dataset;
-    if (action === "menu") {
-      // Toggle the HA sidebar (handy on mobile). See note in the README.
-      this.dispatchEvent(new CustomEvent("hass-toggle-menu", { bubbles: true, composed: true }));
-    } else if (action === "toggle-palette") {
-      this._openPalette = this._openPalette === meal ? null : meal;
-      this._render();
-    } else if (action === "pick-icon") {
-      this._draftIcon[meal] = icon;
-      this._openPalette = null;
-      this._render();
-    } else if (action === "add") {
-      this._add(meal);
-    } else if (action === "promote") {
-      this._move(id, "active");
-    } else if (action === "demote") {
-      this._move(id, "pantry");
-    } else if (action === "ask-remove") {
-      this._confirmId = id;
-      this._render();
-    } else if (action === "keep") {
-      this._confirmId = null;
-      this._render();
-    } else if (action === "remove") {
-      this._remove(id);
+    async _persist() {
+        try {
+            await this._hass.connection.sendMessagePromise({ type: "meal_menu/save", entries: this._entries });
+        } catch (e) {
+            this._error = "Couldn't save your change. It may not stick after a reload.";
+            this._render();
+        }
     }
-  }
 
-  // Don't re-render on typing — that would drop focus. Just track the value.
-  _onInput(e) {
-    const input = e.target.closest("input[data-meal]");
-    if (input) this._drafts[input.dataset.meal] = input.value;
-  }
-  _onKeydown(e) {
-    const input = e.target.closest("input[data-meal]");
-    if (input && e.key === "Enter") this._add(input.dataset.meal);
-  }
+    // --- mutations: update locally (snappy), re-render, then persist ---
+    _add(meal) {
+        const title = (this._drafts[meal] || "").trim();
+        if (!title) return;
+        this._entries.push({ id: uid(), title, icon: this._draftIcon[meal] || "mdi:silverware-fork-knife", meal, location: "pantry" });
+        this._drafts[meal] = "";
+        this._render();
+        this._persist();
+    }
+    _remove(id) {
+        this._entries = this._entries.filter((x) => x.id !== id);
+        this._confirmId = null;
+        this._render();
+        this._persist();
+    }
+    _move(id, location) {
+        this._entries = this._entries.map((x) => (x.id === id ? { ...x, location } : x));
+        this._render();
+        this._persist();
+    }
 
-  _slot(location, meal) {
-    return this._entries.filter((x) => x.location === location && x.meal === meal);
-  }
+    _onClick(e) {
+        const el = e.target.closest("[data-action]");
+        if (!el) return;
+        const { action, id, meal, icon } = el.dataset;
+        if (action === "menu") {
+            // Toggle the HA sidebar (handy on mobile). See note in the README.
+            this.dispatchEvent(new CustomEvent("hass-toggle-menu", { bubbles: true, composed: true }));
+        } else if (action === "toggle-palette") {
+            this._openPalette = this._openPalette === meal ? null : meal;
+            this._render();
+        } else if (action === "pick-icon") {
+            this._draftIcon[meal] = icon;
+            this._openPalette = null;
+            this._render();
+        } else if (action === "add") {
+            this._add(meal);
+        } else if (action === "promote") {
+            this._move(id, "active");
+        } else if (action === "demote") {
+            this._move(id, "pantry");
+        } else if (action === "ask-remove") {
+            this._confirmId = id;
+            this._render();
+        } else if (action === "keep") {
+            this._confirmId = null;
+            this._render();
+        } else if (action === "remove") {
+            this._remove(id);
+        }
+    }
 
-  _dish(it, mode) {
-    const confirming = this._confirmId === it.id;
-    const tile = `<span class="dish-icon"><ha-icon icon="${esc(it.icon)}"></ha-icon></span>`;
-    if (confirming) {
-      return `<div class="dish${mode === "pantry" ? " pantry-dish" : ""} confirming">
+    // Don't re-render on typing — that would drop focus. Just track the value.
+    _onInput(e) {
+        const input = e.target.closest("input[data-meal]");
+        if (input) this._drafts[input.dataset.meal] = input.value;
+    }
+    _onKeydown(e) {
+        const input = e.target.closest("input[data-meal]");
+        if (input && e.key === "Enter") this._add(input.dataset.meal);
+    }
+
+    _slot(location, meal) {
+        return this._entries.filter((x) => x.location === location && x.meal === meal);
+    }
+
+    _dish(it, mode) {
+        const confirming = this._confirmId === it.id;
+        const tile = `<span class="dish-icon"><ha-icon icon="${esc(it.icon)}"></ha-icon></span>`;
+        if (confirming) {
+            return `<div class="dish${mode === "pantry" ? " pantry-dish" : ""} confirming">
         ${tile}
         <span class="dish-title confirm-text">Remove?</span>
         <button class="confirmbtn keep" data-action="keep">Keep</button>
         <button class="confirmbtn del" data-action="remove" data-id="${it.id}">Delete</button>
       </div>`;
-    }
-    const move =
-      mode === "pantry"
-        ? `<button class="iconbtn promote" data-action="promote" data-id="${it.id}" title="Add to menu"><ha-icon icon="mdi:arrow-up"></ha-icon></button>`
-        : `<button class="iconbtn" data-action="demote" data-id="${it.id}" title="Return to pantry"><ha-icon icon="mdi:arrow-down"></ha-icon></button>`;
-    return `<div class="dish${mode === "pantry" ? " pantry-dish" : ""}">
+        }
+        const move =
+            mode === "pantry"
+                ? `<button class="iconbtn promote" data-action="promote" data-id="${it.id}" title="Add to menu"><ha-icon icon="mdi:arrow-up"></ha-icon></button>`
+                : `<button class="iconbtn" data-action="demote" data-id="${it.id}" title="Return to pantry"><ha-icon icon="mdi:arrow-down"></ha-icon></button>`;
+        return `<div class="dish${mode === "pantry" ? " pantry-dish" : ""}">
       ${tile}
       <span class="dish-title">${esc(it.title)}</span>
       ${move}
       <button class="iconbtn danger" data-action="ask-remove" data-id="${it.id}" title="Remove"><ha-icon icon="mdi:close"></ha-icon></button>
     </div>`;
-  }
+    }
 
-  _render() {
-    this._rendered = true;
-    const activeCount = this._entries.filter((x) => x.location === "active").length;
+    _render() {
+        this._rendered = true;
+        const activeCount = this._entries.filter((x) => x.location === "active").length;
 
-    const board = MEALS.map(({ key, label, icon, dot }) => {
-      const items = this._slot("active", key);
-      const dishes = items.length
-        ? items.map((it) => this._dish(it, "active")).join("")
-        : `<p class="empty">Nothing planned — plate something from the pantry below.</p>`;
-      return `<div class="course">
+        const board = MEALS.map(({ key, label, icon, dot }) => {
+            const items = this._slot("active", key);
+            const dishes = items.length ? items.map((it) => this._dish(it, "active")).join("") : `<p class="empty">Nothing planned — plate something from the pantry below.</p>`;
+            return `<div class="course">
         <div class="course-head">
           <span class="course-dot" style="background:${dot}"></span>
           <ha-icon class="course-icon" icon="${icon}"></ha-icon>
@@ -179,17 +193,17 @@ class MealMenuPanel extends HTMLElement {
         </div>
         <div class="dishes">${dishes}</div>
       </div>`;
-    }).join("");
+        }).join("");
 
-    const pantry = MEALS.map(({ key, label, dot }) => {
-      const items = this._slot("pantry", key);
-      const palette =
-        this._openPalette === key
-          ? `<div class="palette">${ICONS.map(
-              (ic) => `<button class="palette-emoji" data-action="pick-icon" data-meal="${key}" data-icon="${ic}" title="${ic}"><ha-icon icon="${ic}"></ha-icon></button>`
-            ).join("")}</div>`
-          : "";
-      return `<div class="shelf">
+        const pantry = MEALS.map(({ key, label, dot }) => {
+            const items = this._slot("pantry", key);
+            const palette =
+                this._openPalette === key
+                    ? `<div class="palette">${ICONS.map(
+                          (ic) => `<button class="palette-emoji" data-action="pick-icon" data-meal="${key}" data-icon="${ic}" title="${ic}"><ha-icon icon="${ic}"></ha-icon></button>`,
+                      ).join("")}</div>`
+                    : "";
+            return `<div class="shelf">
         <div class="shelf-head">
           <span class="course-dot" style="background:${dot}"></span>
           <span class="shelf-label">${label}</span>
@@ -202,19 +216,18 @@ class MealMenuPanel extends HTMLElement {
         </div>
         <div class="dishes pantry-dishes">${items.map((it) => this._dish(it, "pantry")).join("")}</div>
       </div>`;
-    }).join("");
+        }).join("");
 
-    this.shadowRoot.innerHTML = `<style>${CSS}</style>
+        this.shadowRoot.innerHTML = `<style>${CSS}</style>
       <div class="topbar">
-        <button class="menu-btn" data-action="menu" title="Toggle sidebar"><ha-icon icon="mdi:menu"></ha-icon></button>
         <span class="topbar-title">Meal Menu</span>
       </div>
       <div class="wrap">
         ${this._error ? `<div class="banner">${esc(this._error)}</div>` : ""}
         <header class="masthead">
-          <div class="masthead-mark"><ha-icon icon="mdi:chef-hat"></ha-icon></div>
+          // <div class="masthead-mark"><ha-icon icon="mdi:chef-hat"></ha-icon></div>
           <div>
-            <h1>Today&rsquo;s Menu</h1>
+            <h1>Menu</h1>
             <p class="masthead-sub">${activeCount === 0 ? "Nothing planned yet" : `${activeCount} dishes on the board`}</p>
           </div>
         </header>
@@ -223,7 +236,7 @@ class MealMenuPanel extends HTMLElement {
         <div class="rule rule-label"><span>Pantry</span></div>
         <section class="pantry">${pantry}</section>
       </div>`;
-  }
+    }
 }
 
 customElements.define("meal-menu-panel", MealMenuPanel);
@@ -245,7 +258,7 @@ ha-icon { --mdc-icon-size: 18px; display: inline-flex; }
 
 .topbar {
   display: flex; align-items: center; gap: 6px;
-  padding: 6px 10px; border-bottom: 1px solid var(--line); background: var(--card);
+  padding: 16px 10px; border-bottom: 1px solid var(--line); background: var(--card);
 }
 .topbar-title { font-family: 'Fraunces', Georgia, serif; font-weight: 600; font-size: 15px; }
 .menu-btn {
