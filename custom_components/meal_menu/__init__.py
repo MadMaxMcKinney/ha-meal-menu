@@ -87,7 +87,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         module_url=f"{URL_BASE}/{PANEL_FILENAME}",
         sidebar_title=PANEL_TITLE,
         sidebar_icon=PANEL_ICON,
-        require_admin=True,
+        require_admin=False,
         config={},
     )
 
