@@ -320,12 +320,12 @@ ha-icon { --mdc-icon-size: 18px; display: inline-flex; }
 
 .rule { margin: 16px 0 22px; }
 .rule-double { height: 4px; border-top: 1.5px solid var(--meal-menu-text-primary); border-bottom: 1px solid var(--meal-menu-text-primary); }
-.rule-label { display: flex; align-items: center; gap: 14px; margin: 34px 0 18px; }
+.rule-label { display: flex; align-items: center; gap: 14px; margin: 56px 0 18px; }
 .rule-label::before, .rule-label::after { content: ""; height: 1px; background: var(--meal-menu-divider); flex: 1; }
 .rule-label span { font-family: 'Fraunces', Georgia, serif; font-style: italic; font-size: 15px; letter-spacing: 0.04em; }
 
-.board, .pantry { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-@media (max-width: 720px) { .board, .pantry { grid-template-columns: 1fr; gap: 12px; } }
+.board, .pantry { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+@media (max-width: 720px) { .board, .pantry { grid-template-columns: 1fr; gap: 32px; } }
 
 .course-head, .shelf-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
 .course-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
@@ -364,7 +364,7 @@ ha-icon { --mdc-icon-size: 18px; display: inline-flex; }
 .composer-input::placeholder { color: var(--meal-menu-text-disabled); }
 .composer-input:focus { border-color: var(--meal-menu-accent-light); box-shadow: 0 0 0 3px rgba(var(--rgb-primary-color, 110,143,94), 0.15); }
 .addbtn { width: 38px; height: 38px; flex: none; cursor: pointer; border: none; border-radius: 10px; display: grid; place-items: center; background: var(--meal-menu-accent); color: var(--meal-menu-text-on-accent); }
-.addbtn:hover { background: var(--dark-primary-color, #38522F); }
+.addbtn:hover { opacity: 0.7; }
 .addbtn ha-icon { color: var(--meal-menu-text-on-accent); }
 
 .palette { position: absolute; z-index: 20; top: 44px; left: 0; display: grid; grid-template-columns: repeat(6, 1fr); gap: 2px; background: var(--meal-menu-card-background); border: 1px solid var(--meal-menu-divider); border-radius: 12px; padding: 7px; box-shadow: var(--ha-card-box-shadow, 0 12px 28px rgba(43,38,32,0.16)); }
