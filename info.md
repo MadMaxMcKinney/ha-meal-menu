@@ -9,6 +9,11 @@ A simple breakfast/lunch/dinner menu board with a "pantry" of saved dishes. The 
 - 🔄 Move dishes between active menu and pantry
 - 🎯 Icon customization for each dish
 
+## What's New in v1.4.0
+- **New icon** - Added a new icon for the integration
+- **Improved UI** - Enhanced layout and styling for better usability
+- **Fixed bugs** - Resolved issue preventing non-admins from viewing the menu
+
 ## What's New in v1.3.0
 - **Improved UI** - Enhanced layout and styling for better usability
 
