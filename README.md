@@ -1,3 +1,5 @@
+<img width="72" height="72" alt="icon" src="https://github.com/user-attachments/assets/26d2e18e-95b3-4ed5-80d0-113c4dd3d467" />
+
 # Meal Menu — Home Assistant integration
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
