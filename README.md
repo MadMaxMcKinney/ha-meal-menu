@@ -1,7 +1,7 @@
 # Meal Menu — Home Assistant integration
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
-[![GitHub Release](https://img.shields.io/github/release/maxga/ha-meal-menu.svg)](https://github.com/MadMaxMcKinney/ha-meal-menu/releases)
+[![GitHub Release](https://img.shields.io/github/release/MadMaxMcKinney/ha-meal-menu.svg)](https://github.com/MadMaxMcKinney/ha-meal-menu/releases)
 
 A simple breakfast/lunch/dinner menu board with a "pantry" of saved dishes. The integration provides a visual menu board for organizing meals with persistent storage.
 
