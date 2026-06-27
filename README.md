@@ -1,7 +1,7 @@
 # Meal Menu — Home Assistant integration
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
-[![GitHub Release](https://img.shields.io/github/release/maxga/ha-meal-menu.svg)](https://github.com/maxga/ha-meal-menu/releases)
+[![GitHub Release](https://img.shields.io/github/release/maxga/ha-meal-menu.svg)](https://github.com/MadMaxMcKinney/ha-meal-menu/releases)
 
 A simple breakfast/lunch/dinner menu board with a "pantry" of saved dishes. The integration provides a visual menu board for organizing meals with persistent storage.
 
@@ -21,7 +21,7 @@ A simple breakfast/lunch/dinner menu board with a "pantry" of saved dishes. The 
    - Open HACS in your Home Assistant
    - Click the three dots menu in the top right
    - Select "Custom repositories"
-   - Add repository URL: `https://github.com/maxga/ha-meal-menu`
+   - Add repository URL: `https://github.com/MadMaxMcKinney/ha-meal-menu`
    - Category: `Integration`
    - Click "Add"
 
@@ -45,7 +45,7 @@ and serves the panel JS for you.
 
 ### Method 2: Manual Installation
 
-1. **Download the latest release** from [GitHub Releases](https://github.com/maxga/ha-meal-menu/releases)
+1. **Download the latest release** from [GitHub Releases](https://github.com/MadMaxMcKinney/ha-meal-menu/releases)
 
 2. **Copy files:**
    - Copy `custom_components/meal_menu/` to `config/custom_components/meal_menu/`
