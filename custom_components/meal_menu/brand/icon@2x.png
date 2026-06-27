@@ -1,0 +1,10 @@
+This is a placeholder file.
+
+Please replace with an actual 512x512 PNG icon for your integration.
+You can use the Material Design Icons silverware-fork-knife icon or create a custom meal menu icon.
+
+Home Assistant brand requirements:
+- icon.png: 256x256px
+- icon@2x.png: 512x512px (recommended)
+- Transparent background
+- Follow Material Design guidelines

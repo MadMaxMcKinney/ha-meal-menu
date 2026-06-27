@@ -1,12 +1,14 @@
 // Meal Menu — Home Assistant custom panel.
-// Registered via `panel_custom:` in configuration.yaml. HA loads this module
-// and sets `.hass` on the element; we read/write the menu over the WebSocket
-// commands provided by the `meal_menu` integration.
+// Registered programmatically by the `meal_menu` integration via
+// panel_custom.async_register_panel (see __init__.py). HA loads this module and
+// sets `.hass` on the element; we read/write the menu over the WebSocket
+// commands provided by the integration.
 
+// Meal types with theme-aware colors using Home Assistant color variables
 const MEALS = [
-    { key: "breakfast", label: "Breakfast", icon: "mdi:weather-sunset-up", dot: "#C98A2B", def: "mdi:egg-fried" },
-    { key: "lunch", label: "Lunch", icon: "mdi:white-balance-sunny", dot: "#6E8F5E", def: "mdi:food-apple" },
-    { key: "dinner", label: "Dinner", icon: "mdi:weather-night", dot: "#5B5B8A", def: "mdi:silverware-fork-knife" },
+    { key: "breakfast", label: "Breakfast", icon: "mdi:weather-sunset-up", dotVar: "--amber-color", dotFallback: "#C98A2B", def: "mdi:egg-fried" },
+    { key: "lunch", label: "Lunch", icon: "mdi:white-balance-sunny", dotVar: "--green-color", dotFallback: "#6E8F5E", def: "mdi:food-apple" },
+    { key: "dinner", label: "Dinner", icon: "mdi:weather-night", dotVar: "--deep-purple-color", dotFallback: "#5B5B8A", def: "mdi:silverware-fork-knife" },
 ];
 
 const ICONS = [
@@ -181,12 +183,14 @@ class MealMenuPanel extends HTMLElement {
         this._rendered = true;
         const activeCount = this._entries.filter((x) => x.location === "active").length;
 
-        const board = MEALS.map(({ key, label, icon, dot }) => {
+        const board = MEALS.map(({ key, label, icon, dotVar, dotFallback }) => {
             const items = this._slot("active", key);
             const dishes = items.length ? items.map((it) => this._dish(it, "active")).join("") : `<p class="empty">Nothing planned.</p>`;
+            // Use CSS variable for theme support, with fallback color
+            const dotStyle = `background: var(${dotVar}, ${dotFallback})`;
             return `<div class="course">
         <div class="course-head">
-          <span class="course-dot" style="background:${dot}"></span>
+          <span class="course-dot" style="${dotStyle}"></span>
           <ha-icon class="course-icon" icon="${icon}"></ha-icon>
           <span class="course-label">${label}</span>
           <span class="course-count">${items.length}</span>
@@ -195,7 +199,7 @@ class MealMenuPanel extends HTMLElement {
       </div>`;
         }).join("");
 
-        const pantry = MEALS.map(({ key, label, dot }) => {
+        const pantry = MEALS.map(({ key, label, dotVar, dotFallback }) => {
             const items = this._slot("pantry", key);
             const palette =
                 this._openPalette === key
@@ -203,9 +207,11 @@ class MealMenuPanel extends HTMLElement {
                           (ic) => `<button class="palette-emoji" data-action="pick-icon" data-meal="${key}" data-icon="${ic}" title="${ic}"><ha-icon icon="${ic}"></ha-icon></button>`,
                       ).join("")}</div>`
                     : "";
+            // Use CSS variable for theme support, with fallback color
+            const dotStyle = `background: var(${dotVar}, ${dotFallback})`;
             return `<div class="shelf">
         <div class="shelf-head">
-          <span class="course-dot" style="background:${dot}"></span>
+          <span class="course-dot" style="${dotStyle}"></span>
           <span class="shelf-label">${label}</span>
         </div>
         <div class="composer">
@@ -242,48 +248,84 @@ customElements.define("meal-menu-panel", MealMenuPanel);
 
 const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap');
+
+/*
+ * Meal Menu Theme Integration
+ *
+ * This panel uses Home Assistant theme variables for automatic
+ * light/dark mode support and full theme compatibility.
+ *
+ * Internal Variable Names:
+ * - meal-menu-background: Main page background
+ * - meal-menu-card-background: Card/container backgrounds
+ * - meal-menu-text-primary: Primary text color
+ * - meal-menu-text-secondary: Secondary/muted text
+ * - meal-menu-accent: Primary accent color (buttons, links)
+ * - meal-menu-accent-light: Light variant of accent
+ * - meal-menu-secondary-accent: Secondary accent color
+ * - meal-menu-divider: Borders and dividers
+ *
+ * Fallback values preserve the original warm "menu paper" aesthetic
+ * when HA theme variables are unavailable.
+ */
+
 :host {
-  --paper: #FBF6EC; --card: #FFFFFF; --ink: #2B2620; --ink-soft: #8A7F70;
-  --herb: #46663E; --herb-bright: #6E8F5E; --honey: #C98A2B; --line: #E3D9C6;
-  display: block; min-height: 100vh; background: var(--paper);
-  color: var(--ink); font-family: 'Inter', system-ui, sans-serif;
+  /* Descriptive internal variables mapped to HA theme system */
+  --meal-menu-background: var(--primary-background-color, #FBF6EC);
+  --meal-menu-card-background: var(--card-background-color, #FFFFFF);
+  --meal-menu-text-primary: var(--primary-text-color, #2B2620);
+  --meal-menu-text-secondary: var(--secondary-text-color, #8A7F70);
+  --meal-menu-accent: var(--primary-color, #46663E);
+  --meal-menu-accent-light: var(--light-primary-color, #6E8F5E);
+  --meal-menu-secondary-accent: var(--accent-color, #C98A2B);
+  --meal-menu-divider: var(--divider-color, #E3D9C6);
+
+  /* State colors using HA patterns */
+  --meal-menu-error: var(--error-color, #B4452F);
+  --meal-menu-text-on-accent: var(--text-primary-color, #FFFFFF);
+  --meal-menu-text-disabled: var(--disabled-text-color, #B6AB99);
+
+  display: block; min-height: 100vh; background: var(--meal-menu-background);
+  color: var(--meal-menu-text-primary); font-family: 'Inter', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 * { box-sizing: border-box; }
 ha-icon { --mdc-icon-size: 18px; display: inline-flex; }
 
-.loading { padding: 40px; color: var(--ink-soft); font-family: 'Inter', sans-serif; }
+.loading { padding: 40px; color: var(--meal-menu-text-secondary); font-family: 'Inter', sans-serif; }
 .wrap { padding: 22px clamp(16px, 4vw, 40px) 48px; max-width: 1100px; margin: 0 auto; }
 
 .topbar {
   display: flex; align-items: center; gap: 6px;
-  padding: 16px 10px; border-bottom: 1px solid var(--line); background: var(--card);
+  padding: 16px 10px; border-bottom: 1px solid var(--meal-menu-divider); background: var(--meal-menu-card-background);
 }
 .topbar-title { font-family: 'Fraunces', Georgia, serif; font-weight: 600; font-size: 15px; }
 .menu-btn {
   width: 38px; height: 38px; border: none; background: none; cursor: pointer;
-  color: var(--ink-soft); border-radius: 8px; display: grid; place-items: center;
+  color: var(--meal-menu-text-secondary); border-radius: 8px; display: grid; place-items: center;
 }
-.menu-btn:hover { background: rgba(43,38,32,0.06); color: var(--ink); }
+.menu-btn:hover { background: rgba(var(--rgb-primary-text-color, 43,38,32), 0.06); color: var(--meal-menu-text-primary); }
 
 .banner {
-  background: #FCF3F0; border: 1px solid #E3B5AA; color: #B4452F;
+  background: rgba(var(--rgb-error-color, 219,68,55), 0.08);
+  border: 1px solid var(--meal-menu-error);
+  color: var(--meal-menu-error);
   border-radius: 10px; padding: 9px 12px; font-size: 13px; margin-bottom: 16px;
 }
 
 .masthead { display: flex; align-items: center; gap: 14px; }
 .masthead-mark {
   width: 40px; height: 40px; flex: none; display: grid; place-items: center;
-  border: 1.5px solid var(--herb); border-radius: 50%; color: var(--herb);
+  border: 1.5px solid var(--meal-menu-accent); border-radius: 50%; color: var(--meal-menu-accent);
 }
 .masthead-mark ha-icon { --mdc-icon-size: 20px; }
 .masthead h1 { font-family: 'Fraunces', Georgia, serif; font-weight: 600; font-size: clamp(26px, 4.4vw, 34px); letter-spacing: -0.01em; margin: 0; line-height: 1; }
-.masthead-sub { margin: 5px 0 0; font-size: 13px; color: var(--ink-soft); }
+.masthead-sub { margin: 5px 0 0; font-size: 13px; color: var(--meal-menu-text-secondary); }
 
 .rule { margin: 16px 0 22px; }
-.rule-double { height: 4px; border-top: 1.5px solid var(--ink); border-bottom: 1px solid var(--ink); }
+.rule-double { height: 4px; border-top: 1.5px solid var(--meal-menu-text-primary); border-bottom: 1px solid var(--meal-menu-text-primary); }
 .rule-label { display: flex; align-items: center; gap: 14px; margin: 34px 0 18px; }
-.rule-label::before, .rule-label::after { content: ""; height: 1px; background: var(--line); flex: 1; }
+.rule-label::before, .rule-label::after { content: ""; height: 1px; background: var(--meal-menu-divider); flex: 1; }
 .rule-label span { font-family: 'Fraunces', Georgia, serif; font-style: italic; font-size: 15px; letter-spacing: 0.04em; }
 
 .board, .pantry { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
@@ -291,46 +333,46 @@ ha-icon { --mdc-icon-size: 18px; display: inline-flex; }
 
 .course-head, .shelf-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
 .course-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
-.course-icon { color: var(--ink-soft); --mdc-icon-size: 16px; }
+.course-icon { color: var(--meal-menu-text-secondary); --mdc-icon-size: 16px; }
 .course-label, .shelf-label { font-family: 'Fraunces', Georgia, serif; font-weight: 600; font-size: 16px; }
-.course-count { margin-left: auto; font-size: 11px; font-weight: 600; color: var(--ink-soft); background: rgba(70,102,62,0.08); border-radius: 20px; padding: 2px 8px; }
+.course-count { margin-left: auto; font-size: 11px; font-weight: 600; color: var(--meal-menu-text-secondary); background: rgba(var(--rgb-primary-color, 70,102,62), 0.08); border-radius: 20px; padding: 2px 8px; }
 
 .dishes { display: flex; flex-direction: column; gap: 7px; }
-.dish { display: flex; align-items: center; gap: 10px; background: var(--card); border: 1px solid var(--line); border-radius: 11px; padding: 9px 9px 9px 11px; }
-.dish-icon { width: 26px; height: 26px; flex: none; display: grid; place-items: center; color: var(--herb); }
+.dish { display: flex; align-items: center; gap: 10px; background: var(--meal-menu-card-background); border: 1px solid var(--meal-menu-divider); border-radius: 11px; padding: 9px 9px 9px 11px; }
+.dish-icon { width: 26px; height: 26px; flex: none; display: grid; place-items: center; color: var(--meal-menu-accent); }
 .dish-title { flex: 1; font-size: 14px; font-weight: 500; line-height: 1.25; overflow-wrap: anywhere; }
-.empty { margin: 0; font-size: 12.5px; color: var(--ink-soft); line-height: 1.4; font-style: italic; padding: 4px 2px; }
-.pantry-dish { background: transparent; border-style: dashed; border-color: #D8CDB8; }
-.pantry-dish .dish-icon { color: var(--ink-soft); }
+.empty { margin: 0; font-size: 12.5px; color: var(--meal-menu-text-secondary); line-height: 1.4; font-style: italic; padding: 4px 2px; }
+.pantry-dish { background: transparent; border-style: dashed; border-color: var(--meal-menu-divider); }
+.pantry-dish .dish-icon { color: var(--meal-menu-text-secondary); }
 .pantry-dishes { margin-top: 10px; }
 
-.iconbtn { width: 28px; height: 28px; flex: none; border: none; cursor: pointer; border-radius: 8px; display: grid; place-items: center; background: rgba(43,38,32,0.05); color: var(--ink-soft); }
+.iconbtn { width: 28px; height: 28px; flex: none; border: none; cursor: pointer; border-radius: 8px; display: grid; place-items: center; background: rgba(var(--rgb-primary-text-color, 43,38,32), 0.05); color: var(--meal-menu-text-secondary); }
 .iconbtn ha-icon { --mdc-icon-size: 16px; }
-.iconbtn:hover { background: rgba(43,38,32,0.1); color: var(--ink); }
-.iconbtn.promote { background: rgba(70,102,62,0.12); color: var(--herb); }
-.iconbtn.promote:hover { background: var(--herb); color: #fff; }
-.iconbtn.danger:hover { background: #B4452F; color: #fff; }
+.iconbtn:hover { background: rgba(var(--rgb-primary-text-color, 43,38,32), 0.1); color: var(--meal-menu-text-primary); }
+.iconbtn.promote { background: rgba(var(--rgb-primary-color, 70,102,62), 0.12); color: var(--meal-menu-accent); }
+.iconbtn.promote:hover { background: var(--meal-menu-accent); color: var(--meal-menu-text-on-accent); }
+.iconbtn.danger:hover { background: var(--meal-menu-error); color: var(--meal-menu-text-on-accent); }
 
-.dish.confirming { border-color: #E3B5AA; border-style: solid; background: #FCF3F0; }
-.confirm-text { color: #B4452F; font-style: italic; font-weight: 500; }
+.dish.confirming { border-color: var(--meal-menu-error); border-style: solid; background: rgba(var(--rgb-error-color, 219,68,55), 0.08); }
+.confirm-text { color: var(--meal-menu-error); font-style: italic; font-weight: 500; }
 .confirmbtn { height: 28px; padding: 0 11px; flex: none; cursor: pointer; border: none; border-radius: 8px; font-family: inherit; font-size: 12.5px; font-weight: 600; }
-.confirmbtn.keep { background: rgba(43,38,32,0.06); color: var(--ink-soft); }
-.confirmbtn.keep:hover { background: rgba(43,38,32,0.12); color: var(--ink); }
-.confirmbtn.del { background: #B4452F; color: #fff; }
-.confirmbtn.del:hover { background: #963A28; }
+.confirmbtn.keep { background: rgba(var(--rgb-primary-text-color, 43,38,32), 0.06); color: var(--meal-menu-text-secondary); }
+.confirmbtn.keep:hover { background: rgba(var(--rgb-primary-text-color, 43,38,32), 0.12); color: var(--meal-menu-text-primary); }
+.confirmbtn.del { background: var(--meal-menu-error); color: var(--meal-menu-text-on-accent); }
+.confirmbtn.del:hover { background: var(--red-color, #963A28); }
 
 .composer { position: relative; display: flex; align-items: center; gap: 6px; }
-.emoji-pick { width: 38px; height: 38px; flex: none; cursor: pointer; border: 1px solid var(--line); background: var(--card); border-radius: 10px; display: grid; place-items: center; color: var(--herb); }
-.emoji-pick:hover { border-color: var(--herb-bright); }
-.composer-input { flex: 1; min-width: 0; height: 38px; border: 1px solid var(--line); background: var(--card); border-radius: 10px; padding: 0 12px; font-size: 14px; font-family: inherit; color: var(--ink); outline: none; }
-.composer-input::placeholder { color: #B6AB99; }
-.composer-input:focus { border-color: var(--herb-bright); box-shadow: 0 0 0 3px rgba(110,143,94,0.15); }
-.addbtn { width: 38px; height: 38px; flex: none; cursor: pointer; border: none; border-radius: 10px; display: grid; place-items: center; background: var(--herb); color: #fff; }
-.addbtn:hover { background: #38522F; }
+.emoji-pick { width: 38px; height: 38px; flex: none; cursor: pointer; border: 1px solid var(--meal-menu-divider); background: var(--meal-menu-card-background); border-radius: 10px; display: grid; place-items: center; color: var(--meal-menu-accent); }
+.emoji-pick:hover { border-color: var(--meal-menu-accent-light); }
+.composer-input { flex: 1; min-width: 0; height: 38px; border: 1px solid var(--meal-menu-divider); background: var(--meal-menu-card-background); border-radius: 10px; padding: 0 12px; font-size: 14px; font-family: inherit; color: var(--meal-menu-text-primary); outline: none; }
+.composer-input::placeholder { color: var(--meal-menu-text-disabled); }
+.composer-input:focus { border-color: var(--meal-menu-accent-light); box-shadow: 0 0 0 3px rgba(var(--rgb-primary-color, 110,143,94), 0.15); }
+.addbtn { width: 38px; height: 38px; flex: none; cursor: pointer; border: none; border-radius: 10px; display: grid; place-items: center; background: var(--meal-menu-accent); color: var(--meal-menu-text-on-accent); }
+.addbtn:hover { background: var(--dark-primary-color, #38522F); }
 
-.palette { position: absolute; z-index: 20; top: 44px; left: 0; display: grid; grid-template-columns: repeat(6, 1fr); gap: 2px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 7px; box-shadow: 0 12px 28px rgba(43,38,32,0.16); }
-.palette-emoji { width: 34px; height: 34px; border: none; background: none; cursor: pointer; border-radius: 8px; color: var(--ink); display: grid; place-items: center; }
-.palette-emoji:hover { background: rgba(70,102,62,0.1); }
+.palette { position: absolute; z-index: 20; top: 44px; left: 0; display: grid; grid-template-columns: repeat(6, 1fr); gap: 2px; background: var(--meal-menu-card-background); border: 1px solid var(--meal-menu-divider); border-radius: 12px; padding: 7px; box-shadow: var(--ha-card-box-shadow, 0 12px 28px rgba(43,38,32,0.16)); }
+.palette-emoji { width: 34px; height: 34px; border: none; background: none; cursor: pointer; border-radius: 8px; color: var(--meal-menu-text-primary); display: grid; place-items: center; }
+.palette-emoji:hover { background: rgba(var(--rgb-primary-color, 70,102,62), 0.1); }
 
-button:focus-visible, input:focus-visible { outline: 2px solid var(--herb); outline-offset: 2px; }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--meal-menu-accent); outline-offset: 2px; }
 `;

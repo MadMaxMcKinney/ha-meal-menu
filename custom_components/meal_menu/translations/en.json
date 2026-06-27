@@ -1,0 +1,16 @@
+{
+  "title": "Meal Menu",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up Meal Menu",
+        "description": "Add a meal planning menu to your Home Assistant sidebar.\n\nThis integration will:\n• Create a 'Meal Menu' panel in your sidebar\n• Set up storage for your meal plans\n• Enable automatic syncing across all devices\n\nNo additional configuration is required.",
+        "data": {}
+      }
+    },
+    "abort": {
+      "already_configured": "Meal Menu is already configured"
+    },
+    "error": {}
+  }
+}
