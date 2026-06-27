@@ -1,14 +1,16 @@
 # Meal Menu for Home Assistant
 
-A beautiful meal planning integration for Home Assistant that provides a visual menu board for organizing breakfast, lunch, and dinner options.
+A simple breakfast/lunch/dinner menu board with a "pantry" of saved dishes. The integration provides a visual menu board for organizing meals with persistent storage.
 
 ## Features
+- 🎨 Full Home Assistant theme support (automatically adapts to light/dark mode)
+- 📱 Works on all devices (phone, tablet, desktop)
+- 💾 Persistent storage with automatic saving
+- 🔄 Move dishes between active menu and pantry
+- 🎯 Icon customization for each dish
 
-- **Visual Menu Board** - Organize meals in an intuitive drag-and-drop interface
-- **Theme Support** - Automatically adapts to your Home Assistant theme (light/dark mode)
-- **Pantry Storage** - Keep meal ideas in a pantry for future use
-- **Icon Customization** - Choose from various food icons for each dish
-- **Persistent Storage** - All menu data is saved automatically
+## What's New in v1.3.0
+- **Improved UI** - Enhanced layout and styling for better usability
 
 ## What's New in v1.2.0
 
@@ -40,4 +42,4 @@ automatically.
 
 ## Support
 
-For issues or feature requests, please visit the [GitHub repository](https://github.com/maxga/ha-meal-menu/issues).
+For issues or feature requests, please visit the [GitHub repository](https://github.com/MadMaxMcKinney/ha-meal-menu/issues).

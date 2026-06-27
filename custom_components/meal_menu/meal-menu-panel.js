@@ -225,9 +225,6 @@ class MealMenuPanel extends HTMLElement {
         }).join("");
 
         this.shadowRoot.innerHTML = `<style>${CSS}</style>
-      <div class="topbar">
-        <span class="topbar-title">Meal Menu</span>
-      </div>
       <div class="wrap">
         ${this._error ? `<div class="banner">${esc(this._error)}</div>` : ""}
         <header class="masthead">
@@ -236,7 +233,6 @@ class MealMenuPanel extends HTMLElement {
             <p class="masthead-sub">${activeCount === 0 ? "Nothing planned yet" : `${activeCount} dishes on the board`}</p>
           </div>
         </header>
-        <div class="rule rule-double"></div>
         <section class="board">${board}</section>
         <div class="rule rule-label"><span>Pantry</span></div>
         <section class="pantry">${pantry}</section>
@@ -282,7 +278,7 @@ const CSS = `
 
   /* State colors using HA patterns */
   --meal-menu-error: var(--error-color, #B4452F);
-  --meal-menu-text-on-accent: var(--text-primary-color, #FFFFFF);
+  --meal-menu-text-on-accent: var(--text-accent-color, #FFFFFF);
   --meal-menu-text-disabled: var(--disabled-text-color, #B6AB99);
 
   display: block; min-height: 100vh; background: var(--meal-menu-background);
@@ -293,7 +289,7 @@ const CSS = `
 ha-icon { --mdc-icon-size: 18px; display: inline-flex; }
 
 .loading { padding: 40px; color: var(--meal-menu-text-secondary); font-family: 'Inter', sans-serif; }
-.wrap { padding: 22px clamp(16px, 4vw, 40px) 48px; max-width: 1100px; margin: 0 auto; }
+.wrap { padding: 56px clamp(16px, 4vw, 40px) 48px; max-width: 1100px; margin: 0 auto; }
 
 .topbar {
   display: flex; align-items: center; gap: 6px;
@@ -313,7 +309,7 @@ ha-icon { --mdc-icon-size: 18px; display: inline-flex; }
   border-radius: 10px; padding: 9px 12px; font-size: 13px; margin-bottom: 16px;
 }
 
-.masthead { display: flex; align-items: center; gap: 14px; }
+.masthead { display: flex; align-items: center; gap: 14px; padding-bottom: 32px; }
 .masthead-mark {
   width: 40px; height: 40px; flex: none; display: grid; place-items: center;
   border: 1.5px solid var(--meal-menu-accent); border-radius: 50%; color: var(--meal-menu-accent);
@@ -369,6 +365,7 @@ ha-icon { --mdc-icon-size: 18px; display: inline-flex; }
 .composer-input:focus { border-color: var(--meal-menu-accent-light); box-shadow: 0 0 0 3px rgba(var(--rgb-primary-color, 110,143,94), 0.15); }
 .addbtn { width: 38px; height: 38px; flex: none; cursor: pointer; border: none; border-radius: 10px; display: grid; place-items: center; background: var(--meal-menu-accent); color: var(--meal-menu-text-on-accent); }
 .addbtn:hover { background: var(--dark-primary-color, #38522F); }
+.addbtn ha-icon { color: var(--meal-menu-text-on-accent); }
 
 .palette { position: absolute; z-index: 20; top: 44px; left: 0; display: grid; grid-template-columns: repeat(6, 1fr); gap: 2px; background: var(--meal-menu-card-background); border: 1px solid var(--meal-menu-divider); border-radius: 12px; padding: 7px; box-shadow: var(--ha-card-box-shadow, 0 12px 28px rgba(43,38,32,0.16)); }
 .palette-emoji { width: 34px; height: 34px; border: none; background: none; cursor: pointer; border-radius: 8px; color: var(--meal-menu-text-primary); display: grid; place-items: center; }
